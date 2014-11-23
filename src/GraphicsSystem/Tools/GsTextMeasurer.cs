@@ -8,16 +8,16 @@ namespace GraphicsSystem
 {
   public static class GsTextMeasurer
   {
-    private static Func<GsFont, string, GsSize> sMeasure;
+    private static IGsTextMeasurer sMeasurer;
 
-    public static void Register(Func<GsFont, string, GsSize> measure)
+    public static void Register(IGsTextMeasurer measurer)
     {
-      sMeasure = measure;
+      sMeasurer = measurer;
     }
 
     public static GsSize MeasureString(GsFont font, string text)
     {
-      return sMeasure(font, text);
+      return sMeasurer.MeasureString(font, text);
     }
   }
 }

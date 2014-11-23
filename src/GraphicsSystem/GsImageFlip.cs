@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace GraphicsSystem
 {
-  public abstract class GsObject
+  public enum GsImageFlip
   {
-    public object Data;
-    public object Tag;
+    None,
+    Horizontal,
+    Vertical,
+    Both,
   }
 }

@@ -66,6 +66,11 @@ namespace GraphicsSystem
       return (value1.X - value2.X) * (value1.X - value2.X) + (value1.Y - value2.Y) * (value1.Y - value2.Y);
     }
 
+    public override string ToString()
+    {
+      return string.Format("{{X={0},Y={1}}}", X, Y);
+    }
+
     public override bool Equals(object obj)
     {
       GsVector? other = obj as GsVector?;
@@ -143,6 +148,11 @@ namespace GraphicsSystem
       value1.X *= factor;
       value1.Y *= factor;
       return value1;
+    }
+
+    public GsSize ToSize()
+    {
+      return new GsSize(X, Y);
     }
   }
 }

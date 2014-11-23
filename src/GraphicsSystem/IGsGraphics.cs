@@ -20,6 +20,8 @@ namespace GraphicsSystem
     void FillPolygon(GsColor color, GsVector[] pts);
 
     void DrawString(GsFont font, string text, float x, float y, GsColor color);
+
     void DrawImage(GsImage image, float x, float y, float width, float height, GsColor tint);
+    void DrawImage(GsImage image, GsRectangle dest, GsRectangle? source, GsVector origin, float angle, GsImageFlip flip, GsColor tint);
   }
 }

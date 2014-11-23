@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GraphicsSystem
 {
-  public class GsRectangle
+  public struct GsRectangle
   {
     public static GsRectangle Empty { get { return new GsRectangle(0, 0, 0, 0); } }
 
@@ -101,6 +101,32 @@ namespace GraphicsSystem
     public static GsRectangle FromLTRB(float left, float top, float right, float bottom)
     {
       return new GsRectangle(left, top, right - left, bottom - top);
+    }
+
+    public override int GetHashCode()
+    {
+      return (int)((uint)this.X ^ ((uint)this.Y << 13 | (uint)this.Y >> 19) ^ ((uint)this.Width << 26 | (uint)this.Width >> 6) ^ ((uint)this.Height << 7 | (uint)this.Height >> 25));
+    }
+
+    public override bool Equals(object obj)
+    {
+      if (!(obj is GsRectangle))
+      {
+        return false;
+      }
+
+      GsRectangle ef = (GsRectangle)obj;
+      return ef.X == this.X && ef.Y == this.Y && ef.Width == this.Width && ef.Height == this.Height;
+    }
+
+    public static bool operator ==(GsRectangle left, GsRectangle right)
+    {
+      return left.X == right.X && left.Y == right.Y && left.Width == right.Width && left.Height == right.Height;
+    }
+
+    public static bool operator !=(GsRectangle left, GsRectangle right)
+    {
+      return !(left == right);
     }
   }
 }

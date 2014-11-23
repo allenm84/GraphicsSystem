@@ -43,6 +43,18 @@ namespace GraphicsSystem
       M44 = m44;
     }
 
+    public override bool Equals(object obj)
+    {
+      if (obj is GsMatrix)
+        return this == (GsMatrix)obj;
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      throw new NotImplementedException();
+    }
+
     public static GsMatrix CreateScale(float xScale, float yScale, float zScale)
     {
       GsMatrix returnMatrix = GsMatrix.Identity;
@@ -117,7 +129,6 @@ namespace GraphicsSystem
       Invert(ref matrix, out matrix);
       return matrix;
     }
-
 
     public static void Invert(ref GsMatrix matrix, out GsMatrix result)
     {
