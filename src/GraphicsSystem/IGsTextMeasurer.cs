@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace GraphicsSystem
 {
-  public abstract class GsObject
+  public interface IGsTextMeasurer
   {
-    public object Data;
+    GsSize MeasureString(GsFont font, string text);
   }
 }
