@@ -39,13 +39,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GsFont.cs" />
-    <Compile Include="GsImage.cs" />
+    <Compile Include="Extensions\GsGraphicsExtensions.cs" />
+    <Compile Include="Extensions\GsVectorExtensions.cs" />
+    <Compile Include="Geometry\BeizerMaker.cs" />
+    <Compile Include="Geometry\Geometry.cs" />
+    <Compile Include="Geometry\RectangleCorners.cs" />
+    <Compile Include="GsColor.cs" />
+    <Compile Include="Extensions\GsColorExtensions.cs" />
+    <Compile Include="Objects\GsFont.cs" />
+    <Compile Include="Objects\GsImage.cs" />
+    <Compile Include="GsLine.cs" />
+    <Compile Include="Geometry\Ratcliff.cs" />
+    <Compile Include="Tools\GsMath.cs" />
     <Compile Include="GsMatrix.cs" />
-    <Compile Include="GsObject.cs" />
+    <Compile Include="Objects\GsObject.cs" />
     <Compile Include="GsRectangle.cs" />
     <Compile Include="GsSize.cs" />
+    <Compile Include="Tools\GsTextMeasurer.cs" />
     <Compile Include="GsVector.cs" />
+    <Compile Include="Alignment\GsHorizontalAlignment.cs" />
+    <Compile Include="Alignment\GsAlignment.cs" />
+    <Compile Include="Alignment\GsVerticalAlignment.cs" />
+    <Compile Include="IGsGraphics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
