@@ -186,7 +186,7 @@ namespace MLA.Graphics.Drawing
     /// <param name="color">The color of the line to draw.</param>
     public override void DrawLine(float x0, float y0, float x1, float y1, MgColor color)
     {
-      __drawLine(Buffer, x0.Round(), y0.Round(), x1.Round(), y1.Round(), color);
+      __drawLine(Buffer, x0, y0, x1, y1, color);
     }
 
     /// <summary>
@@ -302,309 +302,90 @@ namespace MLA.Graphics.Drawing
 
     #region Helper Functions
 
-    private static void __drawLine(MgSurfaceBuffer surface, int x0, int y0, int x1, int y1, MgColor color)
+    private static void swap_(ref double a, ref double b) { double t = a; a = b; b = t; }
+    private static double fabs(double v) { return Math.Abs(v); }
+    private static int ipart_(double x) { return (int)x; }
+    private static int round_(double x) { return (int)Math.Round(x); }
+    private static double fpart_(double x) { return x - ipart_(x); }
+    private static double rfpart_(double x) { return 1.0 - fpart_(x); }
+
+    private static void __drawLine(MgSurfaceBuffer surface, double x1, double y1, double x2, double y2, MgColor color)
     {
-      #region Implementation
+      double dx = x2 - x1;
+      double dy = y2 - y1;
 
-      var dy = y1 - y0;
-      var dx = x1 - x0;
-      int stepx, stepy;
+      Action<int, int, double> plot_ = (X, Y, C) => surface.SetPixel(color, X, Y);
 
-      if (dy < 0)
+      if (fabs(dx) > fabs(dy))
       {
-        dy = -dy;
-        stepy = -1;
-      }
-      else
-      {
-        stepy = 1;
-      }
-      if (dx < 0)
-      {
-        dx = -dx;
-        stepx = -1;
-      }
-      else
-      {
-        stepx = 1;
-      }
-
-      surface.SetPixel(color, x0, y0);
-      surface.SetPixel(color, x1, y1);
-      if (dx > dy)
-      {
-        var length = (dx - 1) >> 2;
-        var extras = (dx - 1) & 3;
-        var incr2 = (dy << 2) - (dx << 1);
-        if (incr2 < 0)
+        if (x2 < x1)
         {
-          var c = dy << 1;
-          var incr1 = c << 1;
-          var d = incr1 - dx;
-          for (var i = 0; i < length; i++)
-          {
-            x0 += stepx;
-            x1 -= stepx;
-            if (d < 0)
-            {
-              // Pattern:
-              surface.SetPixel(color, x0, y0); //
-              surface.SetPixel(color, x0 += stepx, y0); //  x o o
-              surface.SetPixel(color, x1, y1); //
-              surface.SetPixel(color, x1 -= stepx, y1);
-              d += incr1;
-            }
-            else
-            {
-              if (d < c)
-              {
-                // Pattern:
-                surface.SetPixel(color, x0, y0); //      o
-                surface.SetPixel(color, x0 += stepx, y0 += stepy); //  x o
-                surface.SetPixel(color, x1, y1); //
-                surface.SetPixel(color, x1 -= stepx, y1 -= stepy);
-              }
-              else
-              {
-                surface.SetPixel(color, x0, y0 += stepy); // Pattern:
-                surface.SetPixel(color, x0 += stepx, y0); //    o o 
-                surface.SetPixel(color, x1, y1 -= stepy); //  x
-                surface.SetPixel(color, x1 -= stepx, y1); //
-              }
-              d += incr2;
-            }
-          }
-          if (extras > 0)
-          {
-            if (d < 0)
-            {
-              surface.SetPixel(color, x0 += stepx, y0);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1); }
-            }
-            else if (d < c)
-            {
-              surface.SetPixel(color, x0 += stepx, y0);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1); }
-            }
-            else
-            {
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1 -= stepy); }
-            }
-          }
+          swap_(ref x1, ref x2);
+          swap_(ref y1, ref y2);
         }
-        else
+        double gradient = dy / dx;
+        double xend = round_(x1);
+        double yend = y1 + gradient * (xend - x1);
+        double xgap = rfpart_(x1 + 0.5);
+        int xpxl1 = ipart_(xend);
+        int ypxl1 = ipart_(yend);
+        plot_(xpxl1, ypxl1, rfpart_(yend) * xgap);
+        plot_(xpxl1, ypxl1 + 1, fpart_(yend) * xgap);
+        double intery = yend + gradient;
+
+        xend = round_(x2);
+        yend = y2 + gradient * (xend - x2);
+        xgap = fpart_(x2 + 0.5);
+        int xpxl2 = ipart_(xend);
+        int ypxl2 = ipart_(yend);
+        plot_(xpxl2, ypxl2, rfpart_(yend) * xgap);
+        plot_(xpxl2, ypxl2 + 1, fpart_(yend) * xgap);
+
+        int x;
+        for (x = xpxl1 + 1; x <= (xpxl2 - 1); x++)
         {
-          var c = (dy - dx) << 1;
-          var incr1 = c << 1;
-          var d = incr1 + dx;
-          for (var i = 0; i < length; i++)
-          {
-            x0 += stepx;
-            x1 -= stepx;
-            if (d > 0)
-            {
-              surface.SetPixel(color, x0, y0 += stepy); // Pattern:
-              surface.SetPixel(color, x0 += stepx, y0 += stepy); //      o
-              surface.SetPixel(color, x1, y1 -= stepy); //    o
-              surface.SetPixel(color, x1 -= stepx, y1 -= stepy); //  x
-              d += incr1;
-            }
-            else
-            {
-              if (d < c)
-              {
-                surface.SetPixel(color, x0, y0); // Pattern:
-                surface.SetPixel(color, x0 += stepx, y0 += stepy); //      o
-                surface.SetPixel(color, x1, y1); //  x o
-                surface.SetPixel(color, x1 -= stepx, y1 -= stepy); //
-              }
-              else
-              {
-                surface.SetPixel(color, x0, y0 += stepy); // Pattern:
-                surface.SetPixel(color, x0 += stepx, y0); //    o o
-                surface.SetPixel(color, x1, y1 -= stepy); //  x
-                surface.SetPixel(color, x1 -= stepx, y1); //
-              }
-              d += incr2;
-            }
-          }
-          if (extras > 0)
-          {
-            if (d > 0)
-            {
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1 -= stepy); }
-            }
-            else if (d < c)
-            {
-              surface.SetPixel(color, x0 += stepx, y0);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1); }
-            }
-            else
-            {
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0); }
-              if (extras > 2)
-              {
-                if (d > c)
-                {
-                  surface.SetPixel(color, x1 -= stepx, y1 -= stepy);
-                }
-                else
-                {
-                  surface.SetPixel(color, x1 -= stepx, y1);
-                }
-              }
-            }
-          }
+          plot_(x, ipart_(intery), rfpart_(intery));
+          plot_(x, ipart_(intery) + 1, fpart_(intery));
+          intery += gradient;
         }
       }
       else
       {
-        var length = (dy - 1) >> 2;
-        var extras = (dy - 1) & 3;
-        var incr2 = (dx << 2) - (dy << 1);
-        if (incr2 < 0)
+        if (y2 < y1)
         {
-          var c = dx << 1;
-          var incr1 = c << 1;
-          var d = incr1 - dy;
-          for (var i = 0; i < length; i++)
-          {
-            y0 += stepy;
-            y1 -= stepy;
-            if (d < 0)
-            {
-              surface.SetPixel(color, x0, y0);
-              surface.SetPixel(color, x0, y0 += stepy);
-              surface.SetPixel(color, x1, y1);
-              surface.SetPixel(color, x1, y1 -= stepy);
-              d += incr1;
-            }
-            else
-            {
-              if (d < c)
-              {
-                surface.SetPixel(color, x0, y0);
-                surface.SetPixel(color, x0 += stepx, y0 += stepy);
-                surface.SetPixel(color, x1, y1);
-                surface.SetPixel(color, x1 -= stepx, y1 -= stepy);
-              }
-              else
-              {
-                surface.SetPixel(color, x0 += stepx, y0);
-                surface.SetPixel(color, x0, y0 += stepy);
-                surface.SetPixel(color, x1 -= stepx, y1);
-                surface.SetPixel(color, x1, y1 -= stepy);
-              }
-              d += incr2;
-            }
-          }
-          if (extras > 0)
-          {
-            if (d < 0)
-            {
-              surface.SetPixel(color, x0, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1, y1 -= stepy); }
-            }
-            else if (d < c)
-            {
-              surface.SetPixel(color, stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1, y1 -= stepy); }
-            }
-            else
-            {
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1 -= stepy); }
-            }
-          }
+          swap_(ref x1, ref x2);
+          swap_(ref y1, ref y2);
         }
-        else
+        double gradient = dx / dy;
+        double yend = round_(y1);
+        double xend = x1 + gradient * (yend - y1);
+        double ygap = rfpart_(y1 + 0.5);
+        int ypxl1 = ipart_(yend);
+        int xpxl1 = ipart_(xend);
+        plot_(xpxl1, ypxl1, rfpart_(xend) * ygap);
+        plot_(xpxl1, ypxl1 + 1, fpart_(xend) * ygap);
+        double interx = xend + gradient;
+
+        yend = round_(y2);
+        xend = x2 + gradient * (yend - y2);
+        ygap = fpart_(y2 + 0.5);
+        int ypxl2 = ipart_(yend);
+        int xpxl2 = ipart_(xend);
+        plot_(xpxl2, ypxl2, rfpart_(xend) * ygap);
+        plot_(xpxl2, ypxl2 + 1, fpart_(xend) * ygap);
+
+        int y;
+        for (y = ypxl1 + 1; y <= (ypxl2 - 1); y++)
         {
-          var c = (dx - dy) << 1;
-          var incr1 = c << 1;
-          var d = incr1 + dy;
-          for (var i = 0; i < length; i++)
-          {
-            y0 += stepy;
-            y1 -= stepy;
-            if (d > 0)
-            {
-              surface.SetPixel(color, x0 += stepx, y0);
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              surface.SetPixel(color, x1 -= stepy, y1);
-              surface.SetPixel(color, x1 -= stepx, y1 -= stepy);
-              d += incr1;
-            }
-            else
-            {
-              if (d < c)
-              {
-                surface.SetPixel(color, x0, y0);
-                surface.SetPixel(color, x0 += stepx, y0 += stepy);
-                surface.SetPixel(color, x1, y1);
-                surface.SetPixel(color, x1 -= stepx, y1 -= stepy);
-              }
-              else
-              {
-                surface.SetPixel(color, x0 += stepx, y0);
-                surface.SetPixel(color, x0, y0 += stepy);
-                surface.SetPixel(color, x1 -= stepx, y1);
-                surface.SetPixel(color, x1, y1 -= stepy);
-              }
-              d += incr2;
-            }
-          }
-          if (extras > 0)
-          {
-            if (d > 0)
-            {
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1 -= stepx, y1 -= stepy); }
-            }
-            else if (d < c)
-            {
-              surface.SetPixel(color, x0, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0 += stepx, y0 += stepy); }
-              if (extras > 2) { surface.SetPixel(color, x1, y1 -= stepy); }
-            }
-            else
-            {
-              surface.SetPixel(color, x0 += stepx, y0 += stepy);
-              if (extras > 1) { surface.SetPixel(color, x0, y0 += stepy); }
-              if (extras > 2)
-              {
-                if (d > c)
-                {
-                  surface.SetPixel(color, x1 -= stepx, y1 -= stepy);
-                }
-                else
-                {
-                  surface.SetPixel(color, x1, y1 -= stepy);
-                }
-              }
-            }
-          }
+          plot_(ipart_(interx), y, rfpart_(interx));
+          plot_(ipart_(interx) + 1, y, fpart_(interx));
+          interx += gradient;
         }
       }
-
-      #endregion
     }
 
     private static void __fillPolygon(MgSurfaceBuffer surface, IEnumerable<MgVector2> data, ColorProxy proxy)
     {
-      #region Implementation
-
       proxy.CalculateFor(data);
       var polygon = data.Round().Distinct().ToArray();
 
@@ -682,14 +463,10 @@ namespace MLA.Graphics.Drawing
           }
         }
       }
-
-      #endregion
     }
 
     private void __drawImage(MgColor[] data, MgRectangle source, MgRectangleF destination)
     {
-      #region Implementation
-
       // get the source information
       var rect = source.ToRectangle();
 
@@ -711,8 +488,6 @@ namespace MLA.Graphics.Drawing
           Buffer.SetPixel(pixel, screen_x, screen_y);
         }
       }
-
-      #endregion
     }
 
     #endregion
